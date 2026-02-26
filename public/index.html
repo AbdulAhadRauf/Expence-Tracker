@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Roza Tracker — Ramadan Expense Splitter</title>
+    <meta name="description"
+        content="Track and split daily Ramadan food expenses among friends. See who owes what at a glance." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <style>
+        /* ───────── CSS Reset & Base ───────── */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg-primary: #0f1117;
+            --bg-secondary: #1a1d27;
+            --bg-card: #1e2130;
+            --bg-card-hover: #252839;
+            --border: #2e3347;
+            --text-primary: #eaedf3;
+            --text-secondary: #8b90a0;
+            --text-muted: #5a5f72;
+            --gold: #d4a843;
+            --gold-light: #f0d078;
+            --gold-glow: rgba(212, 168, 67, .25);
+            --emerald: #34d399;
+            --emerald-glow: rgba(52, 211, 153, .15);
+            --rose: #f87171;
+            --rose-glow: rgba(248, 113, 113, .15);
+            --blue: #60a5fa;
+            --radius: 14px;
+            --radius-sm: 10px;
+            --shadow: 0 4px 24px rgba(0, 0, 0, .35);
+            --transition: .25s cubic-bezier(.4, 0, .2, 1);
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* ───────── Layout ───────── */
+        .app-container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 24px 16px 80px;
+        }
+
+        /* ───────── Header ───────── */
+        .header {
+            text-align: center;
+            padding: 40px 0 32px;
+        }
+
+        .header-icon {
+            font-size: 3rem;
+            margin-bottom: 8px;
+            filter: drop-shadow(0 0 18px var(--gold-glow));
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--gold-light), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: .95rem;
+            margin-top: 4px;
+        }
+
+        /* ───────── Summary Cards Grid ───────── */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 22px 20px;
+            box-shadow: var(--shadow);
+            transition: transform var(--transition), box-shadow var(--transition);
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, .45);
+        }
+
+        .card-label {
+            font-size: .75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .card-value {
+            font-size: 1.65rem;
+            font-weight: 800;
+            color: var(--gold-light);
+        }
+
+        .card-value.emerald {
+            color: var(--emerald);
+        }
+
+        .card-value.blue {
+            color: var(--blue);
+        }
+
+        /* ───────── Sections ───────── */
+        .section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 26px 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title .icon {
+            font-size: 1.2rem;
+        }
+
+        /* ───────── Form ───────── */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group.full {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-size: .78rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+
+        input,
+        select,
+        textarea {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 11px 14px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: .92rem;
+            outline: none;
+            transition: border-color var(--transition), box-shadow var(--transition);
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px var(--gold-glow);
+        }
+
+        select {
+            cursor: pointer;
+        }
+
+        select option {
+            background: var(--bg-secondary);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 12px 28px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: .92rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--gold), #b8892e);
+            color: #111;
+            box-shadow: 0 4px 16px var(--gold-glow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px var(--gold-glow);
+        }
+
+        .btn-primary:active {
+            transform: scale(.97);
+        }
+
+        .btn-primary:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-action {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 5px 10px;
+            font-size: .75rem;
+            border-radius: var(--radius-sm);
+        }
+
+        .btn-action:hover {
+            background: var(--bg-card-hover);
+            color: var(--text-primary);
+        }
+
+        .btn-danger {
+            background: transparent;
+            color: var(--rose);
+            border: 1px solid rgba(248, 113, 113, .2);
+            padding: 6px 12px;
+            font-size: .78rem;
+        }
+
+        .btn-danger:hover {
+            background: var(--rose-glow);
+            border-color: var(--rose);
+        }
+
+        /* ───────── Balances ───────── */
+        .balance-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .balance-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            border-radius: var(--radius-sm);
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            transition: background var(--transition);
+        }
+
+        .balance-item:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .balance-name {
+            font-weight: 600;
+            font-size: .95rem;
+        }
+
+        .balance-paid {
+            font-size: .78rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .balance-right {
+            text-align: right;
+        }
+
+        .balance-amount {
+            font-weight: 700;
+            font-size: 1.05rem;
+        }
+
+        .balance-amount.owed {
+            color: var(--emerald);
+        }
+
+        .balance-amount.owes {
+            color: var(--rose);
+        }
+
+        .badge {
+            display: inline-block;
+            font-size: .68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            padding: 3px 8px;
+            border-radius: 6px;
+            margin-top: 3px;
+        }
+
+        .badge-owed {
+            background: var(--emerald-glow);
+            color: var(--emerald);
+        }
+
+        .badge-owes {
+            background: var(--rose-glow);
+            color: var(--rose);
+        }
+
+        /* ───────── Expenses Table ───────── */
+        .expenses-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .expenses-table th {
+            font-size: .72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: var(--text-muted);
+            text-align: left;
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .expenses-table td {
+            padding: 12px;
+            font-size: .9rem;
+            border-bottom: 1px solid rgba(46, 51, 71, .4);
+            vertical-align: middle;
+        }
+
+        .expenses-table tr {
+            transition: background var(--transition);
+        }
+
+        .expenses-table tbody tr:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .expense-amount {
+            font-weight: 700;
+            color: var(--gold-light);
+        }
+
+        .expense-date {
+            color: var(--text-muted);
+            font-size: .8rem;
+        }
+
+        /* ───────── Toast ───────── */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .toast {
+            padding: 14px 22px;
+            border-radius: var(--radius-sm);
+            font-size: .88rem;
+            font-weight: 500;
+            box-shadow: var(--shadow);
+            animation: slideIn .35s ease-out, fadeOut .4s 2.8s ease-in forwards;
+        }
+
+        .toast-success {
+            background: #16493a;
+            color: var(--emerald);
+            border: 1px solid rgba(52, 211, 153, .3);
+        }
+
+        .toast-error {
+            background: #4a1c1c;
+            color: var(--rose);
+            border: 1px solid rgba(248, 113, 113, .3);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+        }
+
+        /* ───────── Empty state ───────── */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state .icon {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+        }
+
+        .empty-state p {
+            font-size: .9rem;
+        }
+
+        /* ───────── Spinner ───────── */
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(17, 17, 17, .3);
+            border-top-color: #111;
+            border-radius: 50%;
+            animation: spin .6s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ───────── Responsive ───────── */
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .section {
+                padding: 18px 14px;
+            }
+
+            .expenses-table th:last-child,
+            .expenses-table td:last-child {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-icon">🌙</div>
+            <h1>Roza Tracker</h1>
+            <p>Split Ramadan food expenses effortlessly</p>
+        </header>
+
+        <!-- Summary Cards -->
+        <div class="summary-grid" id="summaryGrid">
+            <div class="card">
+                <div class="card-label">Total Spent</div>
+                <div class="card-value" id="totalSpent">₹0.00</div>
+            </div>
+            <div class="card">
+                <div class="card-label">Cost Per Head</div>
+                <div class="card-value emerald" id="perHead">₹0.00</div>
+            </div>
+            <div class="card">
+                <div class="card-label">Members</div>
+                <div class="card-value blue" id="memberCount">0</div>
+            </div>
+        </div>
+
+        <!-- Add Expense Form -->
+        <section class="section" id="addExpenseSection">
+            <div class="section-title">
+                <span class="icon">➕</span> Add Expense
+            </div>
+            <form id="expenseForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="buyerSelect">Buyer</label>
+                        <select id="buyerSelect" required>
+                            <option value="">Select buyer…</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="amountInput">Amount (₹)</label>
+                        <input type="number" id="amountInput" placeholder="0.00" min="0.01" step="0.01" required />
+                    </div>
+                    <div class="form-group full">
+                        <label for="descInput">Description</label>
+                        <input type="text" id="descInput" placeholder="e.g. Chicken, Dates, Fruits…" />
+                    </div>
+                    <div class="form-group full">
+                        <label>Split Among</label>
+                        <div id="splitCheckboxes" style="display:flex; gap:12px; flex-wrap:wrap; margin-top:4px;">
+                            <!-- Checkboxes injected by JS -->
+                        </div>
+                    </div>
+                    <div class="form-group full" style="align-items:flex-end;">
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            Add Expense
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </section>
+
+        <!-- Settle Debt Form -->
+        <section class="section" id="settleDebtSection">
+            <div class="section-title" style="color:var(--emerald);">
+                <span class="icon">🤝</span> Settle Debt
+            </div>
+            <form id="settleForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="payerSelect">Who Paid?</label>
+                        <select id="payerSelect" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="payeeSelect">Who Received?</label>
+                        <select id="payeeSelect" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="settleAmount">Amount (₹)</label>
+                        <input type="number" id="settleAmount" placeholder="0.00" min="0.01" step="0.01" required />
+                    </div>
+                    <div class="form-group" style="align-items:flex-end; justify-content: flex-end;">
+                        <button type="submit" class="btn btn-primary" id="settleBtn"
+                            style="width:100%;background:linear-gradient(135deg, var(--emerald), #22996d);color:white;">
+                            Record Settlement
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </section>
+
+        <!-- Balances -->
+        <section class="section">
+            <div class="section-title">
+                <span class="icon">⚖️</span> Balances
+            </div>
+            <div class="balance-list" id="balanceList">
+                <div class="empty-state">
+                    <div class="icon">📊</div>
+                    <p>No data yet. Add an expense to see balances.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Expense History -->
+        <section class="section">
+            <div class="section-title">
+                <span class="icon">📜</span> Expense History
+            </div>
+            <div id="expenseHistory">
+                <div class="empty-state">
+                    <div class="icon">🕌</div>
+                    <p>No expenses recorded yet. Start by adding one above.</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        /* ═══════════════════════════════════════════
+           Roza Tracker — Client-Side Logic
+           ═══════════════════════════════════════════ */
+
+        const API = '/api';
+
+        // ── DOM References ──
+        const buyerSelect = document.getElementById('buyerSelect');
+        const amountInput = document.getElementById('amountInput');
+        const descInput = document.getElementById('descInput');
+        const expenseForm = document.getElementById('expenseForm');
+        const submitBtn = document.getElementById('submitBtn');
+
+        const payerSelect = document.getElementById('payerSelect');
+        const payeeSelect = document.getElementById('payeeSelect');
+        const settleAmount = document.getElementById('settleAmount');
+        const settleForm = document.getElementById('settleForm');
+        const settleBtn = document.getElementById('settleBtn');
+
+        const totalSpentEl = document.getElementById('totalSpent');
+        const perHeadEl = document.getElementById('perHead');
+        const memberCountEl = document.getElementById('memberCount');
+        const balanceList = document.getElementById('balanceList');
+        const expenseHistory = document.getElementById('expenseHistory');
+        const toastContainer = document.getElementById('toastContainer');
+        const splitCheckboxes = document.getElementById('splitCheckboxes');
+
+        // State
+        let usersData = [];
+
+        // ── Helpers ──
+        function currency(n) {
+            return (n < 0 ? '−' : '') + '₹' + Math.abs(n).toFixed(2);
+        }
+
+        function fmtDate(iso) {
+            const d = new Date(iso);
+            return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+                + ' · '
+                + d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function toast(message, type = 'success') {
+            const el = document.createElement('div');
+            el.className = `toast toast-${type}`;
+            el.textContent = message;
+            toastContainer.appendChild(el);
+            setTimeout(() => el.remove(), 3400);
+        }
+
+        // ── API Calls ──
+        async function fetchJSON(url, opts) {
+            const res = await fetch(url, opts);
+            if (!res.ok) {
+                const body = await res.json().catch(() => ({}));
+                throw new Error(body.detail || `Request failed (${res.status})`);
+            }
+            return res.json();
+        }
+
+        async function loadUsers() {
+            try {
+                usersData = await fetchJSON(`${API}/users`);
+                const optionsHtml = '<option value="">Select user…</option>' +
+                    usersData.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
+                buyerSelect.innerHTML = optionsHtml;
+                payerSelect.innerHTML = optionsHtml;
+                payeeSelect.innerHTML = optionsHtml;
+
+                splitCheckboxes.innerHTML = usersData.map(u => `
+                    <label style="display:flex; align-items:center; gap:4px; cursor:pointer; font-size:.85rem; text-transform:none; color:var(--text-primary); font-weight:400;">
+                        <input type="checkbox" value="${u.id}" checked class="split-cb" /> ${u.name}
+                    </label>
+                `).join('');
+            } catch (e) {
+                toast('Failed to load users: ' + e.message, 'error');
+            }
+        }
+
+        async function loadSummary() {
+            try {
+                const s = await fetchJSON(`${API}/summary`);
+                totalSpentEl.textContent = currency(s.total_spent);
+                perHeadEl.textContent = currency(s.per_head);
+                memberCountEl.textContent = s.user_count;
+
+                if (s.balances.length === 0) {
+                    balanceList.innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">📊</div>
+                    <p>No data yet. Add an expense to see balances.</p>
+                </div>`;
+                    return;
+                }
+
+                balanceList.innerHTML = s.balances.map(b => `
+            <div class="balance-item">
+                <div>
+                    <div class="balance-name">${b.name}</div>
+                    <div class="balance-paid">Paid: ${currency(b.total_paid)}</div>
+                </div>
+                <div class="balance-right">
+                    <div class="balance-amount ${b.status === 'Owed' ? 'owed' : 'owes'}">
+                        ${b.status === 'Owes' ? '−' : '+'}${currency(b.balance)}
+                    </div>
+                    <span class="badge ${b.status === 'Owed' ? 'badge-owed' : 'badge-owes'}">
+                        ${b.status === 'Owed' ? '✓ Owed Back' : '⬇ Owes'}
+                    </span>
+                </div>
+            </div>
+        `).join('');
+            } catch (e) {
+                toast('Failed to load summary: ' + e.message, 'error');
+            }
+        }
+
+        async function loadExpenses() {
+            try {
+                const expenses = await fetchJSON(`${API}/expenses`);
+
+                if (expenses.length === 0) {
+                    expenseHistory.innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">🕌</div>
+                    <p>No expenses recorded yet. Start by adding one above.</p>
+                </div>`;
+                    return;
+                }
+
+                expenseHistory.innerHTML = `
+            <table class="expenses-table">
+                <thead>
+                    <tr>
+                        <th>Buyer</th>
+                        <th>Description</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${expenses.map(e => `
+                        <tr id="row-${e.id}">
+                            <td class="cell-buyer">${e.buyer_name || '—'}</td>
+                            <td class="cell-desc">
+                                ${e.description || '—'}
+                                ${e.is_settlement ? '<span class="badge badge-owed" style="margin-left:6px;">Settlement</span>' :
+                        (e.split_among && e.split_among.length < usersData.length && e.split_among.length > 0 ?
+                            `<span style="margin-left:6px; font-size:0.75rem; color:var(--text-muted);">(${e.split_among.length} shared)</span>` : '')}
+                            </td>
+                            <td class="cell-amount expense-amount" data-raw="${e.amount}">${currency(e.amount)}</td>
+                            <td class="expense-date">${fmtDate(e.created_at)}</td>
+                            <td class="cell-actions" style="white-space:nowrap; text-align:right;">
+                                ${!e.is_settlement ? `<button class="btn btn-action" onclick="editExpense('${e.id}', '${e.buyer_id}', '${(e.split_among || []).join(',')}', false)">✎ Edit</button>` : ''}
+                                <button class="btn btn-danger" onclick="deleteExpense('${e.id}')">✕ Delete</button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>`;
+            } catch (e) {
+                toast('Failed to load expenses: ' + e.message, 'error');
+            }
+        }
+
+        // ── Edit & Delete ──
+        function editExpense(id, currentBuyerId, splitStr, is_settlement) {
+            const row = document.getElementById(`row-${id}`);
+            if (!row) return;
+
+            // Get current text values
+            let currentDesc = row.querySelector('.cell-desc').childNodes[0].nodeValue.trim();
+            const currentAmount = row.querySelector('.cell-amount').getAttribute('data-raw');
+
+            let splitArr = splitStr ? splitStr.split(',') : usersData.map(u => u.id);
+
+            // Build user options
+            const optionsHtml = usersData.map(u =>
+                `<option value="${u.id}" ${u.id === currentBuyerId ? 'selected' : ''}>${u.name}</option>`
+            ).join('');
+
+            let splitHtml = '';
+            if (!is_settlement) {
+                splitHtml = `<div id="edit-split-${id}" style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;">` +
+                    usersData.map(u => `
+                        <label style="display:flex; align-items:center; gap:2px; font-size:0.75rem;">
+                            <input type="checkbox" value="${u.id}" class="edit-split-cb-${id}" ${splitArr.includes(u.id) ? 'checked' : ''} />
+                            ${u.name.split(' ')[0]}
+                        </label>
+                    `).join('') + `</div>`;
+            }
+
+            // Transform row to edit mode
+            row.innerHTML = `
+        <td><select id="edit-buyer-${id}" style="padding:6px;max-width:140px;">${optionsHtml}</select></td>
+        <td>
+            <input type="text" id="edit-desc-${id}" value="${currentDesc === '—' ? '' : currentDesc}" style="padding:6px;width:100%;" />
+            ${splitHtml}
+        </td>
+        <td><input type="number" id="edit-amount-${id}" value="${currentAmount}" step="0.01" min="0.01" style="padding:6px;width:90px;" /></td>
+        <td class="expense-date">Editing...</td>
+        <td style="white-space:nowrap; text-align:right;">
+            <button class="btn btn-action" onclick="saveExpense('${id}', ${is_settlement})" style="color:var(--emerald);border-color:var(--emerald);">✓ Save</button>
+            <button class="btn btn-action" onclick="loadExpenses()">Cancel</button>
+        </td>
+    `;
+        }
+
+        async function saveExpense(id, is_settlement) {
+            const buyer_id = document.getElementById(`edit-buyer-${id}`).value;
+            const description = document.getElementById(`edit-desc-${id}`).value.trim();
+            const amount = parseFloat(document.getElementById(`edit-amount-${id}`).value);
+
+            let split_among = [];
+            if (!is_settlement) {
+                document.querySelectorAll(`.edit-split-cb-${id}:checked`).forEach(cb => split_among.push(cb.value));
+                if (split_among.length === 0) { toast('Select at least one participant', 'error'); return; }
+            }
+
+            if (!amount || amount <= 0) { toast('Enter a valid amount', 'error'); return; }
+
+            let payload = { buyer_id, amount, description };
+            if (!is_settlement) payload.split_among = split_among;
+
+            try {
+                await fetchJSON(`${API}/expenses/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                toast('Expense updated');
+                refreshAll();
+            } catch (e) {
+                toast('Update failed: ' + e.message, 'error');
+            }
+        }
+
+        async function deleteExpense(id) {
+            if (!confirm('Delete this expense completely? This will affect balances.')) return;
+            try {
+                await fetchJSON(`${API}/expenses/${id}`, { method: 'DELETE' });
+                toast('Expense deleted');
+                refreshAll();
+            } catch (e) {
+                toast('Delete failed: ' + e.message, 'error');
+            }
+        }
+
+        // ── Settle Form Logic ──
+        settleForm.addEventListener('submit', async (ev) => {
+            ev.preventDefault();
+            const payer_id = payerSelect.value;
+            const payee_id = payeeSelect.value;
+            const amount = parseFloat(settleAmount.value);
+
+            if (payer_id === payee_id) { toast('Payer and Receiver must be different', 'error'); return; }
+            if (!amount || amount <= 0) { toast('Enter a valid amount', 'error'); return; }
+
+            settleBtn.disabled = true;
+            settleBtn.innerHTML = '<span class="spinner" style="border-top-color:#fff;"></span> Saving…';
+
+            try {
+                await fetchJSON(`${API}/settle`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ payer_id, payee_id, amount }),
+                });
+                toast('Settlement recorded! 🤝');
+                settleAmount.value = '';
+                payerSelect.value = '';
+                payeeSelect.value = '';
+                refreshAll();
+            } catch (e) {
+                toast('Failed: ' + e.message, 'error');
+            } finally {
+                settleBtn.disabled = false;
+                settleBtn.innerHTML = 'Record Settlement';
+            }
+        });
+
+        // ── Form Submit ──
+        expenseForm.addEventListener('submit', async (ev) => {
+            ev.preventDefault();
+            const buyer_id = buyerSelect.value;
+            const amount = parseFloat(amountInput.value);
+            const description = descInput.value.trim();
+
+            let split_among = [];
+            document.querySelectorAll('.split-cb:checked').forEach(cb => split_among.push(cb.value));
+
+            if (split_among.length === 0) {
+                toast('Please select at least one person to split with.', 'error');
+                return;
+            }
+
+            if (!amount || amount <= 0) {
+                toast('Please enter a valid amount.', 'error');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner" style="border-top-color:#111;"></span> Adding…';
+
+            try {
+                await fetchJSON(`${API}/expenses`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ buyer_id, amount, description, split_among })
+                });
+                toast('Expense added successfully! 🌙');
+                amountInput.value = '';
+                descInput.value = '';
+                buyerSelect.value = '';
+                // Reset checkboxes
+                document.querySelectorAll('.split-cb').forEach(cb => cb.checked = true);
+                refreshAll();
+            } catch (e) {
+                toast('Failed to add expense: ' + e.message, 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Add Expense';
+            }
+        });
+
+        // ── Refresh All Data ──
+        function refreshAll() {
+            loadSummary();
+            loadExpenses();
+        }
+
+        // ── Initial Load ──
+        document.addEventListener('DOMContentLoaded', () => {
+            loadUsers();
+            refreshAll();
+        });
+    </script>
+
+</body>
+
+</html>
