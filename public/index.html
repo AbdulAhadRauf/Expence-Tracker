@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Expense Tracker</title>
+    <meta name="description"
+        content="Track and split daily food expenses among friends. See who owes what at a glance." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap"
+        rel="stylesheet" />
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <style>
+        /* ───────── CSS Reset & Base ───────── */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            /* Palette — Warm Stone */
+            --bg:          #F4F1EC;
+            --bg-alt:      #ECEAE4;
+            --surface:     #FFFFFF;
+            --surface-alt: #F9F8F5;
+
+            /* Borders */
+            --border:      #DDD9D2;
+            --border-strong: #C8C3BA;
+
+            /* Text */
+            --text-1:      #1A1714;
+            --text-2:      #6B6560;
+            --text-3:      #AEABA5;
+
+            /* Accent — Deep Sage */
+            --accent:         #2A4A3A;
+            --accent-mid:     #3D6B57;
+            --accent-light:   #EBF2EE;
+            --accent-glow:    rgba(42, 74, 58, 0.08);
+
+            /* Semantic */
+            --success:        #2A4A3A;
+            --success-bg:     #EBF2EE;
+            --danger:         #7A3030;
+            --danger-bg:      #F7EDED;
+            --danger-border:  #E8C8C8;
+
+            /* Shape */
+            --radius:    16px;
+            --radius-sm: 10px;
+            --radius-xs: 6px;
+
+            /* Elevation */
+            --shadow-sm: 0 1px 4px rgba(26, 23, 20, 0.05), 0 2px 8px rgba(26, 23, 20, 0.04);
+            --shadow-md: 0 4px 16px rgba(26, 23, 20, 0.07), 0 1px 4px rgba(26, 23, 20, 0.04);
+            --shadow-lg: 0 8px 32px rgba(26, 23, 20, 0.10), 0 2px 8px rgba(26, 23, 20, 0.05);
+
+            /* Motion */
+            --ease: cubic-bezier(0.16, 1, 0.3, 1);
+            --duration: 240ms;
+        }
+
+        html { -webkit-font-smoothing: antialiased; }
+
+        body {
+            font-family: 'DM Sans', system-ui, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-1);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ───────── Layout ───────── */
+        .app-container {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 48px 24px 96px;
+            animation: fadeUp 0.6s var(--ease) both;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ───────── Header ───────── */
+        .header {
+            text-align: center;
+            padding: 12px 0 60px;
+        }
+
+        .header-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: #fff;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 24px var(--accent-glow);
+        }
+
+        .header-icon svg {
+            width: 28px;
+            height: 28px;
+            stroke-width: 1.5;
+        }
+
+        .header h1 {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: 3rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            color: var(--text-1);
+            line-height: 1.1;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: var(--text-2);
+            font-size: 1rem;
+            font-weight: 400;
+            letter-spacing: 0.01em;
+        }
+
+        /* ───────── Divider ───────── */
+        .rule {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 0 0 40px;
+        }
+
+        /* ───────── Summary Cards ───────── */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 48px;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+            padding: 28px 24px 24px;
+            transition: box-shadow var(--duration) var(--ease), transform var(--duration) var(--ease);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: var(--accent);
+            opacity: 0;
+            transition: opacity var(--duration) var(--ease);
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .card:hover::before { opacity: 1; }
+
+        .card-label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-3);
+            margin-bottom: 12px;
+        }
+
+        .card-value {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: 2.4rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            color: var(--text-1);
+            line-height: 1;
+        }
+
+        .card-value.emerald { color: var(--success); }
+        .card-value.blue    { color: var(--accent-mid); }
+
+        /* ───────── Sections ───────── */
+        .section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+            padding: 36px;
+            margin-bottom: 24px;
+            transition: box-shadow var(--duration) var(--ease);
+        }
+
+        .section:hover { box-shadow: var(--shadow-md); }
+
+        .section-title {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            margin-bottom: 28px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-1);
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-title .icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            height: 34px;
+            border-radius: var(--radius-xs);
+            background: var(--accent-light);
+            color: var(--accent);
+            flex-shrink: 0;
+        }
+
+        .section-title .icon svg {
+            width: 16px;
+            height: 16px;
+            stroke-width: 2;
+        }
+
+        /* ───────── Form ───────── */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group.full { grid-column: 1 / -1; }
+
+        label {
+            font-size: 0.8rem;
+            font-weight: 500;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--text-2);
+        }
+
+        input, select, textarea {
+            background: var(--surface-alt);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 13px 16px;
+            color: var(--text-1);
+            font-family: 'DM Sans', system-ui, sans-serif;
+            font-size: 0.95rem;
+            font-weight: 400;
+            outline: none;
+            transition: border-color var(--duration) var(--ease), box-shadow var(--duration) var(--ease), background var(--duration) var(--ease);
+            width: 100%;
+        }
+
+        input::placeholder { color: var(--text-3); font-weight: 300; }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--accent);
+            background: var(--surface);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23AEABA5' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            background-size: 14px;
+            padding-right: 40px;
+        }
+
+        /* Checkbox pills — JS injected & static */
+        #splitCheckboxes,
+        [id^="edit-split-"] {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 4px;
+        }
+
+        #splitCheckboxes label,
+        [id^="edit-split-"] label {
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            cursor: pointer;
+            background: var(--surface-alt) !important;
+            border: 1px solid var(--border) !important;
+            padding: 8px 14px !important;
+            border-radius: 99px !important;
+            font-size: 0.82rem !important;
+            font-weight: 500 !important;
+            color: var(--text-2) !important;
+            text-transform: none !important;
+            letter-spacing: 0 !important;
+            transition: all var(--duration) var(--ease) !important;
+        }
+
+        #splitCheckboxes label:hover,
+        [id^="edit-split-"] label:hover {
+            border-color: var(--accent) !important;
+            background: var(--accent-light) !important;
+            color: var(--accent) !important;
+            transform: none !important;
+        }
+
+        input[type="checkbox"] {
+            accent-color: var(--accent);
+            width: 14px;
+            height: 14px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        /* ───────── Buttons ───────── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 13px 28px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: 'DM Sans', system-ui, sans-serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--duration) var(--ease);
+            letter-spacing: 0.02em;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #FFFFFF;
+            box-shadow: 0 4px 12px var(--accent-glow);
+            border: 1px solid transparent;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-mid);
+            box-shadow: 0 6px 20px rgba(42, 74, 58, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:active { transform: scale(0.98); }
+
+        .btn-primary:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-action {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text-2);
+            padding: 8px 14px;
+            font-size: 0.82rem;
+            border-radius: var(--radius-xs);
+            font-weight: 500;
+        }
+
+        .btn-action:hover {
+            background: var(--bg-alt);
+            border-color: var(--border-strong);
+            color: var(--text-1);
+        }
+
+        .btn-danger {
+            background: var(--danger-bg);
+            color: var(--danger);
+            border: 1px solid var(--danger-border);
+            padding: 8px 14px;
+            font-size: 0.82rem;
+            border-radius: var(--radius-xs);
+            font-weight: 500;
+        }
+
+        .btn-danger:hover {
+            background: #F0DEDE;
+            border-color: var(--danger);
+            transform: translateY(-1px);
+        }
+
+        /* ───────── Balances (JS Injected) ───────── */
+        .balance-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .balance-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 22px;
+            border-radius: var(--radius-sm);
+            background: var(--surface-alt);
+            border: 1px solid var(--border);
+            transition: all var(--duration) var(--ease);
+        }
+
+        .balance-item:hover {
+            border-color: var(--border-strong);
+            background: #FDFCFA;
+            transform: translateX(2px);
+        }
+
+        .balance-name {
+            font-weight: 500;
+            font-size: 1rem;
+            color: var(--text-1);
+        }
+
+        .balance-paid {
+            font-size: 0.8rem;
+            color: var(--text-3);
+            margin-top: 3px;
+            font-weight: 400;
+        }
+
+        .balance-right { text-align: right; }
+
+        .balance-amount {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-weight: 600;
+            font-size: 1.4rem;
+            letter-spacing: -0.01em;
+        }
+
+        .balance-amount.owed { color: var(--success); }
+        .balance-amount.owes { color: var(--danger); }
+
+        /* Badges (JS injected) */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            font-size: 0.68rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 3px 9px;
+            border-radius: 99px;
+            margin-top: 5px;
+        }
+
+        .badge-owed {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+
+        .badge-owes {
+            background: var(--danger-bg);
+            color: var(--danger);
+        }
+
+        /* ───────── Expenses Table (JS Injected) ───────── */
+        .expenses-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 4px;
+        }
+
+        .expenses-table th {
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.09em;
+            color: var(--text-3);
+            text-align: left;
+            padding: 0 16px 14px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .expenses-table td {
+            padding: 18px 16px;
+            font-size: 0.9rem;
+            color: var(--text-1);
+            font-weight: 400;
+            border-bottom: 1px solid var(--bg-alt);
+            vertical-align: middle;
+        }
+
+        .expenses-table tbody tr {
+            transition: background var(--duration) var(--ease);
+        }
+
+        .expenses-table tbody tr:hover {
+            background: var(--surface-alt);
+        }
+
+        .expenses-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .expense-amount {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--text-1);
+        }
+
+        .expense-date {
+            color: var(--text-3);
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
+
+        .cell-buyer {
+            font-weight: 500;
+            color: var(--text-1);
+        }
+
+        .cell-desc { color: var(--text-2); }
+
+        /* Editing mode inline table inputs */
+        td input, td select {
+            padding: 8px 12px;
+            border-radius: var(--radius-xs);
+            font-size: 0.88rem;
+            background: var(--surface);
+        }
+
+        /* ───────── Toast ───────── */
+        .toast-container {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            padding: 14px 20px;
+            border-radius: var(--radius-sm);
+            font-size: 0.88rem;
+            font-weight: 500;
+            box-shadow: var(--shadow-lg);
+            animation: slideIn 0.35s var(--ease), fadeOut 0.35s 2.8s ease-in forwards;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--text-1);
+            color: #F4F1EC;
+            letter-spacing: 0.01em;
+            min-width: 220px;
+            max-width: 340px;
+        }
+
+        .toast-success {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .toast-error {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(110%) scale(0.95); opacity: 0; }
+            to   { transform: translateX(0) scale(1); opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            to { opacity: 0; transform: translateY(8px) scale(0.96); }
+        }
+
+        /* ───────── Empty State ───────── */
+        .empty-state {
+            text-align: center;
+            padding: 56px 24px;
+            color: var(--text-3);
+            background: var(--surface-alt);
+            border-radius: var(--radius-sm);
+            border: 1px dashed var(--border);
+        }
+
+        .empty-state .icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: var(--bg-alt);
+            color: var(--text-3);
+            margin-bottom: 16px;
+            font-size: 2rem; /* fallback for JS-injected emoji */
+        }
+
+        .empty-state .icon svg {
+            width: 22px;
+            height: 22px;
+            stroke-width: 1.5;
+        }
+
+        .empty-state p {
+            font-size: 0.92rem;
+            font-weight: 400;
+            color: var(--text-3);
+        }
+
+        /* ───────── Spinner ───────── */
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ───────── Settle button override ───────── */
+        #settleBtn {
+            background: var(--accent-mid) !important;
+            color: #fff !important;
+            box-shadow: 0 4px 12px rgba(61, 107, 87, 0.2) !important;
+            width: 100%;
+        }
+
+        #settleBtn:hover {
+            background: var(--accent) !important;
+            box-shadow: 0 6px 20px rgba(42, 74, 58, 0.25) !important;
+        }
+
+        /* ───────── Responsive ───────── */
+        @media (max-width: 720px) {
+            .app-container {
+                padding: 28px 16px 80px;
+            }
+
+            .header { padding: 8px 0 44px; }
+            .header h1 { font-size: 2.2rem; }
+
+            .summary-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+                margin-bottom: 32px;
+            }
+
+            .card { padding: 22px 20px; }
+            .card-value { font-size: 2rem; }
+
+            .section { padding: 24px 20px; margin-bottom: 16px; }
+
+            .form-grid { grid-template-columns: 1fr; gap: 16px; }
+
+            .expenses-table th:nth-child(4),
+            .expenses-table td:nth-child(4) { display: none; }
+
+            .expenses-table th,
+            .expenses-table td { padding: 14px 10px; font-size: 0.82rem; }
+
+            .balance-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .balance-right { text-align: left; }
+
+            .toast-container { bottom: 16px; right: 16px; left: 16px; }
+            .toast { min-width: unset; max-width: unset; }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 { font-size: 1.9rem; }
+            .section-title { font-size: 1.25rem; }
+            .expenses-table th:nth-child(2),
+            .expenses-table td:nth-child(2) { display: none; }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="app-container">
+
+        <!-- Header -->
+        <header class="header">
+            <div class="header-icon">
+                <i data-lucide="moon"></i>
+            </div>
+            <h1>Expense Tacker</h1>
+            <p>Split food expenses effortlessly</p>
+        </header>
+
+        <hr class="rule" />
+
+        <!-- Summary Cards -->
+        <div class="summary-grid" id="summaryGrid">
+            <div class="card">
+                <div class="card-label">Total Spent</div>
+            </div>
+            <div class="card">
+                <div class="card-label">Cost Per Head</div>
+            </div>
+            <div class="card">
+                <div class="card-label">Members</div>
+            </div>
+        </div>
+
+        <!-- Add Expense Form -->
+        <section class="section" id="addExpenseSection">
+            <div class="section-title">
+                <span class="icon"><i data-lucide="plus"></i></span>
+                Add Expense
+            </div>
+            <form id="expenseForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="buyerSelect">Buyer</label>
+                        <select id="buyerSelect" required>
+                            <option value="">Select buyer…</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="amountInput">Amount (₹)</label>
+                        <input type="number" id="amountInput" placeholder="0.00" min="0.01" step="0.01" required />
+                    </div>
+                    <div class="form-group full">
+                        <label for="descInput">Description</label>
+                        <input type="text" id="descInput" placeholder="e.g. Chicken, Dates, Fruits…" />
+                    </div>
+                    <div class="form-group full">
+                        <label>Split Among</label>
+                        <div id="splitCheckboxes" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:6px;">
+                            <!-- Checkboxes injected by JS -->
+                        </div>
+                    </div>
+                    <div class="form-group full" style="align-items:flex-start; margin-top: 8px;">
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            Add Expense
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </section>
+
+        <!-- Settle Debt Form -->
+        <section class="section" id="settleDebtSection">
+            <div class="section-title" style="color:var(--text-1);">
+                <span class="icon"><i data-lucide="arrow-left-right"></i></span>
+                Settle Debt
+            </div>
+            <form id="settleForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="payerSelect">Who Paid?</label>
+                        <select id="payerSelect" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="payeeSelect">Who Received?</label>
+                        <select id="payeeSelect" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="settleAmount">Amount (₹)</label>
+                        <input type="number" id="settleAmount" placeholder="0.00" min="0.01" step="0.01" required />
+                    </div>
+                    <div class="form-group" style="align-items:flex-end; justify-content: flex-end;">
+                        <button type="submit" class="btn btn-primary" id="settleBtn"
+                            style="width:100%; background: #10b981; color:white; box-shadow: 0 8px 20px rgba(16, 185, 129, 0.25);">
+                            Record Settlement
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </section>
+
+        <!-- Balances -->
+        <section class="section">
+            <div class="section-title">
+                <span class="icon"><i data-lucide="scale"></i></span>
+                Balances
+            </div>
+            <div class="balance-list" id="balanceList">
+                <div class="empty-state">
+                    <div class="icon"><i data-lucide="bar-chart-2"></i></div>
+                    <p>No data yet. Add an expense to see balances.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Expense History -->
+        <section class="section">
+            <div class="section-title">
+                <span class="icon"><i data-lucide="clock"></i></span>
+                Expense History
+            </div>
+            <div id="expenseHistory">
+                <div class="empty-state">
+                    <div class="icon"><i data-lucide="receipt"></i></div>
+                    <p>No expenses recorded yet. Start by adding one above.</p>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        /* ═══════════════════════════════════════════
+           Tracker — Client-Side Logic
+           ═══════════════════════════════════════════ */
+
+        const API = '/api';
+
+        // ── DOM References ──
+        const buyerSelect = document.getElementById('buyerSelect');
+        const amountInput = document.getElementById('amountInput');
+        const descInput = document.getElementById('descInput');
+        const expenseForm = document.getElementById('expenseForm');
+        const submitBtn = document.getElementById('submitBtn');
+
+        const payerSelect = document.getElementById('payerSelect');
+        const payeeSelect = document.getElementById('payeeSelect');
+        const settleAmount = document.getElementById('settleAmount');
+        const settleForm = document.getElementById('settleForm');
+        const settleBtn = document.getElementById('settleBtn');
+
+        const totalSpentEl = document.getElementById('totalSpent');
+        const perHeadEl = document.getElementById('perHead');
+        const memberCountEl = document.getElementById('memberCount');
+        const balanceList = document.getElementById('balanceList');
+        const expenseHistory = document.getElementById('expenseHistory');
+        const toastContainer = document.getElementById('toastContainer');
+        const splitCheckboxes = document.getElementById('splitCheckboxes');
+
+        // State
+        let usersData = [];
+
+        // ── Helpers ──
+        function currency(n) {
+            return (n < 0 ? '−' : '') + '₹' + Math.abs(n).toFixed(2);
+        }
+
+        function fmtDate(iso) {
+            const d = new Date(iso);
+            return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+                + ' · '
+                + d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function toast(message, type = 'success') {
+            const el = document.createElement('div');
+            el.className = `toast toast-${type}`;
+            el.textContent = message;
+            toastContainer.appendChild(el);
+            setTimeout(() => el.remove(), 3400);
+        }
+
+        // ── API Calls ──
+        async function fetchJSON(url, opts) {
+            const res = await fetch(url, opts);
+            if (!res.ok) {
+                const body = await res.json().catch(() => ({}));
+                throw new Error(body.detail || `Request failed (${res.status})`);
+            }
+            return res.json();
+        }
+
+        async function loadUsers() {
+            try {
+                usersData = await fetchJSON(`${API}/users`);
+                const optionsHtml = '<option value="">Select user…</option>' +
+                    usersData.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
+                buyerSelect.innerHTML = optionsHtml;
+                payerSelect.innerHTML = optionsHtml;
+                payeeSelect.innerHTML = optionsHtml;
+
+                splitCheckboxes.innerHTML = usersData.map(u => `
+                    <label style="display:flex; align-items:center; gap:4px; cursor:pointer; font-size:.85rem; text-transform:none; color:var(--text-primary); font-weight:400;">
+                        <input type="checkbox" value="${u.id}" checked class="split-cb" /> ${u.name}
+                    </label>
+                `).join('');
+            } catch (e) {
+                toast('Failed to load users: ' + e.message, 'error');
+            }
+        }
+
+        async function loadSummary() {
+            try {
+                const s = await fetchJSON(`${API}/summary`);
+                totalSpentEl.textContent = currency(s.total_spent);
+                perHeadEl.textContent = currency(s.per_head);
+                memberCountEl.textContent = s.user_count;
+
+                if (s.balances.length === 0) {
+                    balanceList.innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">📊</div>
+                    <p>No data yet. Add an expense to see balances.</p>
+                </div>`;
+                    return;
+                }
+
+                balanceList.innerHTML = s.balances.map(b => `
+            <div class="balance-item">
+                <div>
+                    <div class="balance-name">${b.name}</div>
+                    <div class="balance-paid">Paid: ${currency(b.total_paid)}</div>
+                </div>
+                <div class="balance-right">
+                    <div class="balance-amount ${b.status === 'Owed' ? 'owed' : 'owes'}">
+                        ${b.status === 'Owes' ? '−' : '+'}${currency(b.balance)}
+                    </div>
+                    <span class="badge ${b.status === 'Owed' ? 'badge-owed' : 'badge-owes'}">
+                        ${b.status === 'Owed' ? '✓ Owed Back' : '⬇ Owes'}
+                    </span>
+                </div>
+            </div>
+        `).join('');
+            } catch (e) {
+                toast('Failed to load summary: ' + e.message, 'error');
+            }
+        }
+
+        async function loadExpenses() {
+            try {
+                const expenses = await fetchJSON(`${API}/expenses`);
+
+                if (expenses.length === 0) {
+                    expenseHistory.innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">🕌</div>
+                    <p>No expenses recorded yet. Start by adding one above.</p>
+                </div>`;
+                    return;
+                }
+
+                expenseHistory.innerHTML = `
+            <table class="expenses-table">
+                <thead>
+                    <tr>
+                        <th>Buyer</th>
+                        <th>Description</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${expenses.map(e => `
+                        <tr id="row-${e.id}">
+                            <td class="cell-buyer">${e.buyer_name || '—'}</td>
+                            <td class="cell-desc">
+                                ${e.description || '—'}
+                                ${e.is_settlement ? '<span class="badge badge-owed" style="margin-left:6px;">Settlement</span>' :
+                        (e.split_among && e.split_among.length < usersData.length && e.split_among.length > 0 ?
+                            `<span style="margin-left:6px; font-size:0.75rem; color:var(--text-muted);">(${e.split_among.length} shared)</span>` : '')}
+                            </td>
+                            <td class="cell-amount expense-amount" data-raw="${e.amount}">${currency(e.amount)}</td>
+                            <td class="expense-date">${fmtDate(e.created_at)}</td>
+                            <td class="cell-actions" style="white-space:nowrap; text-align:right;">
+                                ${!e.is_settlement ? `<button class="btn btn-action" onclick="editExpense('${e.id}', '${e.buyer_id}', '${(e.split_among || []).join(',')}', false)">✎ Edit</button>` : ''}
+                                <button class="btn btn-danger" onclick="deleteExpense('${e.id}')">✕ Delete</button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>`;
+            } catch (e) {
+                toast('Failed to load expenses: ' + e.message, 'error');
+            }
+        }
+
+        // ── Edit & Delete ──
+        function editExpense(id, currentBuyerId, splitStr, is_settlement) {
+            const row = document.getElementById(`row-${id}`);
+            if (!row) return;
+
+            // Get current text values
+            let currentDesc = row.querySelector('.cell-desc').childNodes[0].nodeValue.trim();
+            const currentAmount = row.querySelector('.cell-amount').getAttribute('data-raw');
+
+            let splitArr = splitStr ? splitStr.split(',') : usersData.map(u => u.id);
+
+            // Build user options
+            const optionsHtml = usersData.map(u =>
+                `<option value="${u.id}" ${u.id === currentBuyerId ? 'selected' : ''}>${u.name}</option>`
+            ).join('');
+
+            let splitHtml = '';
+            if (!is_settlement) {
+                splitHtml = `<div id="edit-split-${id}" style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;">` +
+                    usersData.map(u => `
+                        <label style="display:flex; align-items:center; gap:2px; font-size:0.75rem;">
+                            <input type="checkbox" value="${u.id}" class="edit-split-cb-${id}" ${splitArr.includes(u.id) ? 'checked' : ''} />
+                            ${u.name.split(' ')[0]}
+                        </label>
+                    `).join('') + `</div>`;
+            }
+
+            // Transform row to edit mode
+            row.innerHTML = `
+        <td><select id="edit-buyer-${id}" style="padding:6px;max-width:140px;">${optionsHtml}</select></td>
+        <td>
+            <input type="text" id="edit-desc-${id}" value="${currentDesc === '—' ? '' : currentDesc}" style="padding:6px;width:100%;" />
+            ${splitHtml}
+        </td>
+        <td><input type="number" id="edit-amount-${id}" value="${currentAmount}" step="0.01" min="0.01" style="padding:6px;width:90px;" /></td>
+        <td class="expense-date">Editing...</td>
+        <td style="white-space:nowrap; text-align:right;">
+            <button class="btn btn-action" onclick="saveExpense('${id}', ${is_settlement})" style="color:var(--emerald);border-color:var(--emerald);">✓ Save</button>
+            <button class="btn btn-action" onclick="loadExpenses()">Cancel</button>
+        </td>
+    `;
+        }
+
+        async function saveExpense(id, is_settlement) {
+            const buyer_id = document.getElementById(`edit-buyer-${id}`).value;
+            const description = document.getElementById(`edit-desc-${id}`).value.trim();
+            const amount = parseFloat(document.getElementById(`edit-amount-${id}`).value);
+
+            let split_among = [];
+            if (!is_settlement) {
+                document.querySelectorAll(`.edit-split-cb-${id}:checked`).forEach(cb => split_among.push(cb.value));
+                if (split_among.length === 0) { toast('Select at least one participant', 'error'); return; }
+            }
+
+            if (!amount || amount <= 0) { toast('Enter a valid amount', 'error'); return; }
+
+            let payload = { buyer_id, amount, description };
+            if (!is_settlement) payload.split_among = split_among;
+
+            try {
+                await fetchJSON(`${API}/expenses/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                toast('Expense updated');
+                refreshAll();
+            } catch (e) {
+                toast('Update failed: ' + e.message, 'error');
+            }
+        }
+
+        async function deleteExpense(id) {
+            if (!confirm('Delete this expense completely? This will affect balances.')) return;
+            try {
+                await fetchJSON(`${API}/expenses/${id}`, { method: 'DELETE' });
+                toast('Expense deleted');
+                refreshAll();
+            } catch (e) {
+                toast('Delete failed: ' + e.message, 'error');
+            }
+        }
+
+        // ── Settle Form Logic ──
+        settleForm.addEventListener('submit', async (ev) => {
+            ev.preventDefault();
+            const payer_id = payerSelect.value;
+            const payee_id = payeeSelect.value;
+            const amount = parseFloat(settleAmount.value);
+
+            if (payer_id === payee_id) { toast('Payer and Receiver must be different', 'error'); return; }
+            if (!amount || amount <= 0) { toast('Enter a valid amount', 'error'); return; }
+
+            settleBtn.disabled = true;
+            settleBtn.innerHTML = '<span class="spinner" style="border-top-color:#fff;"></span> Saving…';
+
+            try {
+                await fetchJSON(`${API}/settle`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ payer_id, payee_id, amount }),
+                });
+                toast('Settlement recorded! 🤝');
+                settleAmount.value = '';
+                payerSelect.value = '';
+                payeeSelect.value = '';
+                refreshAll();
+            } catch (e) {
+                toast('Failed: ' + e.message, 'error');
+            } finally {
+                settleBtn.disabled = false;
+                settleBtn.innerHTML = 'Record Settlement';
+            }
+        });
+
+        // ── Form Submit ──
+        expenseForm.addEventListener('submit', async (ev) => {
+            ev.preventDefault();
+            const buyer_id = buyerSelect.value;
+            const amount = parseFloat(amountInput.value);
+            const description = descInput.value.trim();
+
+            let split_among = [];
+            document.querySelectorAll('.split-cb:checked').forEach(cb => split_among.push(cb.value));
+
+            if (split_among.length === 0) {
+                toast('Please select at least one person to split with.', 'error');
+                return;
+            }
+
+            if (!amount || amount <= 0) {
+                toast('Please enter a valid amount.', 'error');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner" style="border-top-color:#fff;"></span> Adding…';
+
+            try {
+                await fetchJSON(`${API}/expenses`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ buyer_id, amount, description, split_among })
+                });
+                toast('Expense added successfully! 🌙');
+                amountInput.value = '';
+                descInput.value = '';
+                buyerSelect.value = '';
+                // Reset checkboxes
+                document.querySelectorAll('.split-cb').forEach(cb => cb.checked = true);
+                refreshAll();
+            } catch (e) {
+                toast('Failed to add expense: ' + e.message, 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Add Expense';
+            }
+        });
+
+        // ── Refresh All Data ──
+        function refreshAll() {
+            loadSummary();
+            loadExpenses();
+        }
+
+        // ── Initial Load ──
+        document.addEventListener('DOMContentLoaded', () => {
+            loadUsers();
+            refreshAll();
+        });
+    </script>
+
+    <!-- Initialise Lucide icons after DOM is ready -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        });
+    </script>
+
+</body>
+
+</html>
